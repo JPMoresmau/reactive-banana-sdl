@@ -8,6 +8,7 @@ import Reactive.Banana as R
 import Graphics.UI.SDL as SDL
 import Reactive.Banana.SDL.Types
 import Control.Monad (when,liftM)
+import Reactive.Banana.Frameworks (AddHandler, Frameworks, fromAddHandler)
 
 whileM :: IO Bool -> IO ()
 whileM f = f >>= (\x -> when x $ whileM f )
@@ -18,14 +19,14 @@ addHandler = fst
 fire :: EventSource a -> a -> IO ()
 fire = snd
 
-sdlEvent :: SDLEventSource -> NetworkDescription t (WrappedEvent t)
+sdlEvent :: Frameworks t => SDLEventSource -> Moment t (WrappedEvent t)
 sdlEvent = fromAddHandler . addHandler . getSDLEvent
 
-tickEvent :: SDLEventSource -> NetworkDescription t (TickEvent t)
+tickEvent :: Frameworks t => SDLEventSource -> Moment t (TickEvent t)
 tickEvent = fromAddHandler . addHandler . getTickEvent
 
 -- | event carrying the difference between the last two SDL ticks
-tickDiffEvent :: SDLEventSource -> NetworkDescription t (TickEvent t)
+tickDiffEvent :: Frameworks t =>SDLEventSource -> Moment t (TickEvent t)
 tickDiffEvent =liftM (successive (\a b->if b>a then Just (b-a) else Nothing)) . tickEvent
  
 

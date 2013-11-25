@@ -10,6 +10,7 @@ import Reactive.Banana as R
 import Graphics.UI.SDL as SDL
 import qualified Graphics.UI.SDL.Time as SdlTime
 import Data.Word
+import Reactive.Banana.Frameworks (newAddHandler)
 
 getSDLEventSource :: IO SDLEventSource
 getSDLEventSource = SDLEventSource <$> newAddHandler <*> newAddHandler

@@ -9,6 +9,7 @@ import qualified Graphics.UI.SDL as SDL (flip)
 import Graphics.UI.SDL.TTF
 import Data.Lens.Common
 import Graphics.UI.SDL.Image (load)
+import Reactive.Banana.Frameworks (Frameworks, changes, reactimate)
 --import Debug.Trace
 
 over :: Graphic -> Graphic -> Graphic
@@ -109,11 +110,11 @@ instance Draw AlignedText Rect where
 discard :: IO a -> IO ()
 discard m = m >> return ()
 
-renderGraph :: Behavior t Graphic -> Behavior t Screen -> NetworkDescription t ()
+renderGraph :: Frameworks t => Behavior t Graphic -> Behavior t Screen -> Moment t ()
 renderGraph bgraph bscreen = do
     egraph <- changes $ render <$> bgraph
     reactimate $ flip paintGraphic <$> bscreen <@> egraph
 
-renderGraphOnEvent :: Behavior t Graphic -> Behavior t Screen -> R.Event t a -> NetworkDescription t ()
+renderGraphOnEvent :: Frameworks t => Behavior t Graphic -> Behavior t Screen -> R.Event t a -> Moment t ()
 renderGraphOnEvent bgraph bscreen event =
     reactimate $ paintGraphic <$> render <$> bgraph <*> bscreen <@ event

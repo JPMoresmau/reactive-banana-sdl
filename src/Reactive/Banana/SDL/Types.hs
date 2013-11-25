@@ -4,6 +4,7 @@ module Reactive.Banana.SDL.Types ( EventSource, SDLEventSource (..), WrappedEven
 import Reactive.Banana as R
 import Graphics.UI.SDL as SDL
 import Data.Word
+import Reactive.Banana.Frameworks (AddHandler)
 
 
 type EventSource a = (AddHandler a, a -> IO ())
