@@ -8,6 +8,7 @@ import Graphics.UI.SDL as SDL hiding (flip)
 import qualified Graphics.UI.SDL as SDL (flip)
 import Graphics.UI.SDL.TTF
 import Data.Lens.Common
+import Graphics.UI.SDL.Image (load)
 --import Debug.Trace
 
 over :: Graphic -> Graphic -> Graphic
@@ -66,11 +67,44 @@ instance Draw Text Mask where
     draw text mask = Graphic $ \dst -> discard $ blitText dst
         where
             blitText dst = do
-                txt <- renderTextSolid (textFont ^$ text) (textMsg ^$ text) (textColor ^$ text)
+                --sz <- textSize (textFont ^$ text) (textMsg ^$ text)
+                txt <- renderTextBlended (textFont ^$ text) (textMsg ^$ text) (textColor ^$ text)
                 blitSurface txt clip dst offset
                 freeSurface txt
             clip = maskClip ^$ mask
             offset = Just $ Rect { rectX = maskX ^$ mask, rectY = maskY ^$ mask, rectW = 0, rectH = 0 }
+
+instance Draw Image Mask where
+    draw img mask = Graphic $ \dst -> discard $ blitText dst
+        where
+            blitText dst = do
+                --sz <- textSize (textFont ^$ text) (textMsg ^$ text)
+                is<-load $ imagePath ^$ img
+                blitSurface is clip dst offset
+                freeSurface is
+            clip = maskClip ^$ mask
+            offset = Just $ Rect { rectX = maskX ^$ mask, rectY = maskY ^$ mask, rectW = 0, rectH = 0 }
+
+
+instance Draw AlignedText Rect where
+    draw text rect = Graphic $ \dst -> discard $ blitText dst
+        where
+            blitText dst = do
+                (w,h) <- textSize (textFont ^$ atextText ^$ text) (textMsg ^$ atextText ^$ text)
+                let x=case atextHAlign ^$ text of
+                        Start->rectX rect
+                        Middle->rectX rect+(((rectW rect)- w) `div` 2)
+                        End->rectX rect+(rectW rect)-w
+                let y=case atextVAlign ^$ text of
+                        Start->rectY rect
+                        Middle->rectY rect+(((rectY rect)- h) `div` 2)
+                        End->rectY rect+(rectY rect)-h        
+                let offset = Just $ Rect { rectX = x, rectY = y, rectW = 0, rectH = 0 }
+                txt <- renderTextBlended (textFont ^$  atextText ^$ text) (textMsg ^$  atextText ^$ text) (textColor ^$ atextText ^$ text)
+                blitSurface txt Nothing dst offset
+                freeSurface txt
+            
+
 
 discard :: IO a -> IO ()
 discard m = m >> return ()

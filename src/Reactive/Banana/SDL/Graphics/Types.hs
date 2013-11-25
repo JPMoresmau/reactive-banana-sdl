@@ -12,11 +12,14 @@ type Screen = SDL.Surface
 newtype Graphic = Graphic { paintGraphic :: Screen -> IO () }
 type GraphicOpt = Rect -> Graphic
 type GraphicUpdate = (GraphicOpt, Rect)
+data Alignment=Start | Middle | End
 data Mask = Mask { _maskClip :: Maybe Rect, _maskX :: Int, _maskY :: Int }
 data Fill = Fill { _fillClip :: Maybe Rect, _fillColor :: Color }
 data Text = Text { _textMsg :: String, _textFont :: Font, _textColor :: Color }
+data AlignedText = AlignedText {_atextText :: Text, _atextHAlign :: Alignment, _atextVAlign :: Alignment}
+data Image = Image { _imagePath :: String}
 
-$(makeLenses [''Mask, ''Fill, ''Text])
+$(makeLenses [''Mask, ''Fill, ''Text, ''AlignedText, ''Image])
 
 instance Eq Color where
     (Color r1 g1 b1) == (Color r2 g2 b2) = r1 == r2 && g1 == g2 && b1 == b2
