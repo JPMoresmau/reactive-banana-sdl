@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances, MultiParamTypeClasses, TypeSynonymInstances, FlexibleContexts #-}
 module Reactive.Banana.SDL.Graphics.Util where
 
 import Reactive.Banana.SDL.Graphics.Types
@@ -19,11 +19,20 @@ over :: Graphic -> Graphic -> Graphic
 under :: Graphic -> Graphic -> Graphic
 under = flip over
 
+inside :: (Draw c Mask)=> c -> Graphic -> Graphic
+(c) `inside` (Graphic x) = Graphic $ \surface -> do
+  mask<-x surface
+  let Graphic y=draw c (Mask Nothing (maybe 0 rectX mask) (maybe 0 rectY mask))
+  y surface
+  return mask 
+
 emptyG :: Graphic
-emptyG = Graphic $ \_ -> return ()
+emptyG = Graphic $ \_ -> return Nothing
+
+
 
 render :: Graphic -> Graphic
-render (Graphic x) = Graphic $ \surface -> x surface >> SDL.flip surface
+render (Graphic x) = Graphic $ \surface -> x surface >> SDL.flip surface >> return Nothing
 
 withinBox :: Rect -> Graphic -> GraphicOpt
 withinBox r g r'=
@@ -53,43 +62,45 @@ between :: Int -> (Int,Int) -> Bool
 between x (l,h) = x >= l && x <= h
 
 instance Draw SDL.Surface Mask where
-    draw src mask = Graphic $ \dst -> void $ blitSurface src clip dst offset
+    draw src mask = Graphic $ \dst -> blitSurface src clip dst offset >> return offset
         where
             clip = maskClip ^$ mask
             offset = Just Rect { rectX = maskX ^$ mask, rectY = maskY ^$ mask, rectW = 0, rectH = 0 }
 
 instance Draw Fill Mask where
-    draw fill mask = Graphic $ \dst -> pixel dst >>= \c -> void $ fillRect dst clip c
+    draw fill mask = Graphic $ \dst -> pixel dst >>= \c ->  fillRect dst clip c >> return Nothing
         where
             pixel dst = (mapRGB . surfaceGetPixelFormat) dst (colorRed color) (colorGreen color) (colorBlue color)
             clip = fillClip ^$ fill
             color = fillColor ^$ fill
 
 instance Draw Text Mask where
-    draw text mask = Graphic $ \dst -> void $ blitText dst
+    draw text mask = Graphic $ \dst -> blitText dst
         where
             blitText dst = do
                 --sz <- textSize (textFont ^$ text) (textMsg ^$ text)
                 txt <- renderTextBlended (textFont ^$ text) (textMsg ^$ text) (textColor ^$ text)
                 blitSurface txt clip dst offset
                 freeSurface txt
+                return offset
             clip = maskClip ^$ mask
             offset = Just Rect { rectX = maskX ^$ mask, rectY = maskY ^$ mask, rectW = 0, rectH = 0 }
 
 instance Draw Image Mask where
-    draw img mask = Graphic $ \dst -> void $ blitText dst
+    draw img mask = Graphic $ \dst -> blitText dst
         where
             blitText dst = do
                 --sz <- textSize (textFont ^$ text) (textMsg ^$ text)
                 is<-load $ imagePath ^$ img
                 blitSurface is clip dst offset
                 freeSurface is
+                return offset
             clip = maskClip ^$ mask
             offset = Just Rect { rectX = maskX ^$ mask, rectY = maskY ^$ mask, rectW = 0, rectH = 0 }
 
 
 instance Draw AlignedText Rect where
-    draw text rect = Graphic $ \dst -> void $ blitText dst
+    draw text rect = Graphic $ \dst -> blitText dst
         where
             blitText dst = do
                 tr<-getTextRect text rect
@@ -97,6 +108,7 @@ instance Draw AlignedText Rect where
                 txt <- renderTextBlended (textFont ^$  atextText ^$ text) (textMsg ^$  atextText ^$ text) (textColor ^$ atextText ^$ text)
                 blitSurface txt Nothing dst offset
                 freeSurface txt
+                return offset
             
 getTextRect :: AlignedText -> Rect -> IO Rect
 getTextRect text rect=do
@@ -114,8 +126,9 @@ getTextRect text rect=do
 renderGraph :: Frameworks t => Behavior t Graphic -> Behavior t Screen -> Moment t ()
 renderGraph bgraph bscreen = do
     egraph <- changes $ render <$> bgraph
-    reactimate $ flip paintGraphic <$> bscreen <@> egraph
+    reactimate $ (\a b->(void (paintGraphic b a))) <$> bscreen <@> egraph
 
 renderGraphOnEvent :: Frameworks t => Behavior t Graphic -> Behavior t Screen -> R.Event t a -> Moment t ()
 renderGraphOnEvent bgraph bscreen event =
-    reactimate $ paintGraphic <$> render <$> bgraph <*> bscreen <@ event
+    reactimate $ (\a->void . paintGraphic a) <$> render <$> bgraph <*> bscreen <@ event
+    

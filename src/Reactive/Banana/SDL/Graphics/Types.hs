@@ -9,7 +9,7 @@ import Data.Lens.Common
 import Data.Lens.Template
 
 type Screen = SDL.Surface
-newtype Graphic = Graphic { paintGraphic :: Screen -> IO () }
+newtype Graphic = Graphic { paintGraphic :: Screen -> IO (Maybe Rect) }
 type GraphicOpt = Rect -> Graphic
 type GraphicUpdate = (GraphicOpt, Rect)
 data Alignment=Start | Middle | End
