@@ -1,3 +1,4 @@
+-- | Graphics handling
 module Reactive.Banana.SDL.Graphics (
     module Reactive.Banana.SDL.Graphics.Types,
     module Reactive.Banana.SDL.Graphics.Util ) where
