@@ -10,7 +10,7 @@ Category:            Graphics
 Homepage:            https://github.com/JPMoresmau/reactive-banana-sdl
 Build-type:          Simple
 Cabal-version:       >=1.6
-
+extra-source-files:  README.md
 
 Source-Repository head
     Type:            git
