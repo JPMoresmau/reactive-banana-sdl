@@ -10,7 +10,7 @@ import qualified Graphics.UI.SDL as SDL (flip)
 import Graphics.UI.SDL.TTF
 import Data.Lens.Common
 import Graphics.UI.SDL.Image (load)
-import Reactive.Banana.Frameworks (Frameworks, changes, reactimate)
+import Reactive.Banana.Frameworks (Frameworks, changes, reactimate,reactimate')
 import Control.Monad (void)
 --import Debug.Trace
 
@@ -140,11 +140,11 @@ getTextRect text rect=do
           End->rectY rect + rectY rect-h     
   return  Rect { rectX = x, rectY = y, rectW = w, rectH = h }
 
--- | rendrer Graph given a behavior for Graphics and a behavior for the Screen   
+-- | render Graph given a behavior for Graphics and a behavior for the Screen   
 renderGraph :: Frameworks t => Behavior t Graphic -> Behavior t Screen -> Moment t ()
 renderGraph bgraph bscreen = do
     egraph <- changes $ render <$> bgraph
-    reactimate $ (\a b->(void (paintGraphic b a))) <$> bscreen <@> egraph
+    reactimate' $ (\b fe -> fe >>= \e -> return $ void $ paintGraphic e b) <$> bscreen <@> egraph
 
 -- | render graph on a event
 renderGraphOnEvent :: Frameworks t => Behavior t Graphic -> Behavior t Screen -> R.Event t a -> Moment t ()
