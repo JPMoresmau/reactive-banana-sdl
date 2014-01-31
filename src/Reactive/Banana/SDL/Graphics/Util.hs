@@ -104,6 +104,16 @@ instance Draw Image Mask where
             clip = maskClip ^$ mask
             offset = Just Rect { rectX = maskX ^$ mask, rectY = maskY ^$ mask, rectW = 0, rectH = 0 }
 
+instance Draw LoadedImage Mask where
+    draw img mask = Graphic $ \dst -> blitText dst
+        where
+            blitText dst = do
+                --sz <- textSize (textFont ^$ text) (textMsg ^$ text)
+                blitSurface (imageScreen ^$ img) clip dst offset
+                return offset
+            clip = maskClip ^$ mask
+            offset = Just Rect { rectX = maskX ^$ mask, rectY = maskY ^$ mask, rectW = 0, rectH = 0 }
+
 
 instance Draw AlignedText Rect where
     draw text rect = Graphic $ \dst -> blitText dst

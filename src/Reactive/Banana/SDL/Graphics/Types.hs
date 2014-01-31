@@ -30,8 +30,10 @@ data Text = Text { _textMsg :: String, _textFont :: Font, _textColor :: Color }
 data AlignedText = AlignedText {_atextText :: Text, _atextHAlign :: Alignment, _atextVAlign :: Alignment}
 -- | Image
 data Image = Image { _imagePath :: String}
+-- | a preloaded image
+data LoadedImage = LoadedImage { _imageScreen :: Screen}
 
-$(makeLenses [''Mask, ''Fill, ''Text, ''AlignedText, ''Image])
+$(makeLenses [''Mask, ''Fill, ''Text, ''AlignedText, ''Image, ''LoadedImage])
 
 instance Eq Color where
     (Color r1 g1 b1) == (Color r2 g2 b2) = r1 == r2 && g1 == g2 && b1 == b2
